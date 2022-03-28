@@ -52,7 +52,7 @@ Parameters:
       Description: My Home IP address
       Type: String
       Default: 88.11.147.231/32
-  KeyPair:
+  keyname:
       Description: Public key name
       Type: String
 
@@ -293,7 +293,6 @@ Resources:
               cd /var/www/html
               echo "Udacity Demo Web Server Up and Running!" > index.html
           ImageId: !Ref AMI
-          KeyName: !Ref KeyPair
           SecurityGroups: 
             - Ref: WebServerSecGroup
           IamInstanceProfile: !Ref ListS3BucketsInstanceProfile
@@ -378,7 +377,7 @@ Resources:
         Properties:
           ImageId: !Ref AMI
           InstanceType: !Ref InstanceType
-          KeyName: !Ref KeyPair
+          KeyName: !Ref keyname
           NetworkInterfaces: 
           - AssociatePublicIpAddress: "true"
             DeviceIndex: "0"

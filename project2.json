@@ -12,8 +12,8 @@
 		"ParameterValue": "t3.medium"
 	},
 	{
-		"ParameterKey": "KeyPair",
-		"ParameterValue": "proyect2"
+		"ParameterKey": "keyname",
+		"ParameterValue": "project2"
 	}
 
 ]
