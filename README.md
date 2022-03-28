@@ -3,6 +3,9 @@ The configuration contained in this repository respondes to the architectured de
 
 https://lucid.app/lucidchart/7b492e3a-e27b-48ee-82ae-e3586c9c2758/edit?invitationId=inv_27cff314-ee1d-4b4d-b2c3-0afb6d7b2253
 
+![Project2](https://user-images.githubusercontent.com/23102562/160429619-2d33e2a9-6a08-43f1-87fe-0a6a0386f478.jpeg)
+
+
 An Aplication load balancer for port 80 is deployed into two public subnets part of the same VPC. A number of web servers are deployed in an ASG by means of a launch configuration.
 Just so I play around a bit with parameter I set some default parameters for AMI and Instance Type that are overriden by the parameter configuration passed when running "aws cloudformation" commands.
 
@@ -33,3 +36,19 @@ Load balancer listens on port 80 and forwards traffic to the WebAppTargetGroup o
 An S3 bucket is created and the corresponding IAM role and permissions are created to provide EC2 instances of access to the bucket.
 
 Finally, the Load Balancing FQDN is provided as output. Likewise, the bastion IP address is provided to facilitate the access to the platform
+
+We can verify that the S3 permissions are ok by:
+1. Ensure there is SSH access from the bastion server to the EC2 instances in the private subnet.
+2. install aws cli tools and the type "aws s3 ls"
+![Captura de Pantalla 2022-03-28 a las 17 04 42](https://user-images.githubusercontent.com/23102562/160428250-2b3b4cd6-64f2-484e-a375-8a7bdc58985e.png)
+
+Likewise we can verify that the configuration is ok by clicking on the LB DNS name provided in the output
+![Captura de Pantalla 2022-03-28 a las 17 06 36](https://user-images.githubusercontent.com/23102562/160428801-8e9f6ea9-b3e2-4f79-a83e-5c23718190ca.png)
+
+
+
+
+
+
+
+
