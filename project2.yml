@@ -48,6 +48,10 @@ Parameters:
       Type: String
       Default: 10.0.3.0/24
 
+  HomeIP:
+      Description: My Home IP address
+      Type: String
+      Default: 88.11.147.231/32
 
 Resources:
   # instace profile contains the IAM Role name(s) that we want to associate to our auto scaling EC2 Servers
@@ -172,7 +176,6 @@ Resources:
             RouteTableId: !Ref PublicRouteTable
             SubnetId: !Ref PublicSubnet2
     
-
     PrivateRouteTable1:
         Type: AWS::EC2::RouteTable
         Properties: 
@@ -215,7 +218,6 @@ Resources:
             RouteTableId: !Ref PrivateRouteTable2
             SubnetId: !Ref PrivateSubnet2
 
-
     LBSecGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
@@ -246,11 +248,33 @@ Resources:
           - IpProtocol: tcp
             FromPort: 22
             ToPort: 22
-            CidrIp: 0.0.0.0/0
+            CidrIp: !Ref VpcCIDR
+          # Extended to check PING
+          - IpProtocol: icmp
+            FromPort: "-1"
+            ToPort: "-1"
+            CidrIp: !Ref VpcCIDR 
           SecurityGroupEgress:
+          - IpProtocol: "-1"
+            CidrIp: 0.0.0.0/0
+    
+    SSHServerSecGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+          GroupDescription: Allow http to our hosts and SSH from local only
+          VpcId: !Ref VPC
+          SecurityGroupIngress:
           - IpProtocol: tcp
-            FromPort: 0
-            ToPort: 65535
+            FromPort: 22
+            ToPort: 22
+            CidrIp: !Ref HomeIP
+          # Extended to check PING
+          - IpProtocol: icmp
+            FromPort: "-1"
+            ToPort: "-1"
+            CidrIp: !Ref VpcCIDR
+          SecurityGroupEgress:
+          - IpProtocol: "-1"
             CidrIp: 0.0.0.0/0
 
     myLaunchConfig: 
@@ -271,6 +295,7 @@ Resources:
           IamInstanceProfile: !Ref ListS3BucketsInstanceProfile
           InstanceType: 
             Ref: "InstanceType"
+          # AssociatePublicIpAddress:  "true"
           BlockDeviceMappings: 
             - DeviceName: /dev/sda1
               Ebs: 
@@ -295,8 +320,8 @@ Resources:
           AutoScalingGroupName: !Sub "${EnvironmentName}-ASG"
           DesiredCapacity: '4'
           VPCZoneIdentifier:
-          - !Ref PrivateSubnet1
-          - !Ref PrivateSubnet2
+          - !Ref PublicSubnet1
+          - !Ref PublicSubnet2
           LaunchConfigurationName:
             Ref: myLaunchConfig
           MinSize: '3'
@@ -304,15 +329,74 @@ Resources:
           TargetGroupARNs:
           - Ref: WebAppTargetGroup
 
+    S3Bucket:
+        Type: 'AWS::S3::Bucket'
+        #DeletionPolicy: Retain
+        Properties:
+          BucketName: "project2-s3-20220328"
+    
+    ListS3BucketsInstanceProfile:
+        Type: AWS::IAM::InstanceProfile
+        Properties:
+          Path: "/"
+          Roles:
+          - Ref: ListS3BucketsRole
+    
+    ListS3BucketsPolicy:
+        Type: AWS::IAM::Policy
+        Properties:
+          PolicyName: ListS3BucketsPolicy
+          PolicyDocument:
+            Statement:
+            - Effect: Allow
+              Action:
+              - s3:List*
+              Resource: "*"
+          Roles:
+          - Ref: ListS3BucketsRole
+    
+    ListS3BucketsRole:
+        Type: AWS::IAM::Role
+        Properties:
+          AssumeRolePolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                - ec2.amazonaws.com
+              Action:
+              - sts:AssumeRole
+          Path: "/"
+
+
+    Bastion:
+        Type: AWS::EC2::Instance
+        Properties:
+          ImageId: !Ref AMI
+          InstanceType: !Ref InstanceType
+          KeyName: proyect2
+          NetworkInterfaces: 
+          - AssociatePublicIpAddress: "true"
+            DeviceIndex: "0"
+            GroupSet: 
+              - Ref: "SSHServerSecGroup"
+            SubnetId: 
+              Ref: "PublicSubnet1"
+    
+    
     WebAppLB:
         Type: AWS::ElasticLoadBalancingV2::LoadBalancer
         Properties:
           Subnets:
-          - !Ref PublicSubnet1
-          - !Ref PublicSubnet2
+          - !Ref PrivateSubnet1
+          - !Ref PrivateSubnet2
           SecurityGroups:
           - Ref: LBSecGroup
-    
+        # I had problems deploying the LB. So will put this on-hold till the 
+        # Internet Gateway is fully available
+        DependsOn: InternetGateway
+        
     Listener:
         Type: AWS::ElasticLoadBalancingV2::Listener
         Properties:
@@ -335,49 +419,58 @@ Resources:
           - Field: path-pattern
             Values: [/]
           ListenerArn: !Ref 'Listener'
-          Priority: 1
-    
-    S3Bucket:
-        Type: 'AWS::S3::Bucket'
-        DeletionPolicy: Retain
+          Priority: 1 
+
+    S3AccessPoint:
+        Type: AWS::S3::AccessPoint
         Properties:
-          BucketName: "project2-s3-20220325"
-    
-    ListS3BucketsInstanceProfile:
-        Type: AWS::IAM::InstanceProfile
+          Bucket:
+            Ref: S3Bucket
+          Name: my-access-point
+          VpcConfiguration:
+            VpcId:
+              Ref: VPC
+          PublicAccessBlockConfiguration:
+            BlockPublicAcls: true
+            IgnorePublicAcls: true
+            BlockPublicPolicy: true
+            RestrictPublicBuckets: true
+
+    S3BucketPolicy:
+        Type: AWS::S3::BucketPolicy
         Properties:
-          Path: "/"
-          Roles:
-          - Ref: ListS3BucketsRole
-    ListS3BucketsPolicy:
-        Type: AWS::IAM::Policy
-        Properties:
-          PolicyName: ListS3BucketsPolicy
+          Bucket:
+            Ref: S3Bucket
           PolicyDocument:
+            Version: 2012-10-17
             Statement:
-            - Effect: Allow
-              Action:
-              - s3:List*
-              Resource: "*"
-          Roles:
-          - Ref: ListS3BucketsRole
-    ListS3BucketsRole:
-        Type: AWS::IAM::Role
-        Properties:
-          AssumeRolePolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-            - Effect: Allow
-              Principal:
-                Service:
-                - ec2.amazonaws.com
-              Action:
-              - sts:AssumeRole
-          Path: "/"
+              - Action: "*"
+                Effect: Allow
+                Resource:
+                  - Fn::GetAtt:
+                      - S3Bucket
+                      - Arn
+                  - Fn::Join:
+                      - ""
+                      - - Fn::GetAtt:
+                            - S3Bucket
+                            - Arn
+                        - /*
+                Principal:
+                  AWS: "*"
+                Condition:
+                  StringEquals:
+                    s3:DataAccessPointAccount:
+                      Ref: AWS::AccountId
 
 Outputs: 
-    LoadBalance-FQDN: 
+    LoadBalanceFQDN: 
         Description: Load Balance FQDN
         Value: !GetAtt WebAppLB.DNSName
         Export:
-          Name: !Sub ${EnvironmentName}-WebAppLB 
+          Name: !Sub ${EnvironmentName}-WebAppLB
+    BastionServerIP: 
+        Description: Bastion Server IP
+        Value: !GetAtt Bastion.PublicIp
+        Export:
+          Name: !Sub ${EnvironmentName}-BastionIP
