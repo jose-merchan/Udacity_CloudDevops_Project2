@@ -49,6 +49,10 @@ Likewise we can verify that the configuration is ok by clicking on the LB DNS na
 
 
 
+To run the cloudformation script
+```bash
+aws cloudformation create-stack --stack-name project2 --template-body file://project2.yml --parameters file://project2.json --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"
+````
 
 
 
