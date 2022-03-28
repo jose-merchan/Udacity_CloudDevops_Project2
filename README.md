@@ -64,7 +64,7 @@ A key-pair must be created so we can access the bastion server. The Keypair name
 	},
 	{
 		"ParameterKey": "KeyPair",
-		"ParameterValue": "proyect2"
+		"ParameterValue": "project2"
 	}
 
 ]
