@@ -46,7 +46,29 @@ Likewise we can verify that the configuration is ok by clicking on the LB DNS na
 ![Captura de Pantalla 2022-03-28 a las 17 06 36](https://user-images.githubusercontent.com/23102562/160428801-8e9f6ea9-b3e2-4f79-a83e-5c23718190ca.png)
 
 
+A key-pair must be created. The Keypair name must be specified on the parameters file
 
+````json
+[
+	{
+		"ParameterKey": "EnvironmentName",
+		"ParameterValue": "Project2"
+	},
+    {
+		"ParameterKey": "AMI",
+		"ParameterValue": "ami-0e472ba40eb589f49"
+	},
+    {
+		"ParameterKey": "InstanceType",
+		"ParameterValue": "t3.medium"
+	},
+	{
+		"ParameterKey": "KeyPair",
+		"ParameterValue": "proyect2"
+	}
+
+]
+````
 
 
 To run the cloudformation script
