@@ -52,6 +52,10 @@ Parameters:
       Description: My Home IP address
       Type: String
       Default: 88.11.147.231/32
+  KeyPair:
+      Description: Public key name
+      Type: String
+
 
 Resources:
   # instace profile contains the IAM Role name(s) that we want to associate to our auto scaling EC2 Servers
@@ -289,7 +293,7 @@ Resources:
               cd /var/www/html
               echo "Udacity Demo Web Server Up and Running!" > index.html
           ImageId: !Ref AMI
-          KeyName: proyect2
+          KeyName: !Ref KeyPair
           SecurityGroups: 
             - Ref: WebServerSecGroup
           IamInstanceProfile: !Ref ListS3BucketsInstanceProfile
@@ -375,7 +379,7 @@ Resources:
         Properties:
           ImageId: !Ref AMI
           InstanceType: !Ref InstanceType
-          KeyName: proyect2
+          KeyName: !Ref KeyPair
           NetworkInterfaces: 
           - AssociatePublicIpAddress: "true"
             DeviceIndex: "0"

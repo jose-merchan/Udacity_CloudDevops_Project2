@@ -10,6 +10,10 @@
     {
 		"ParameterKey": "InstanceType",
 		"ParameterValue": "t3.medium"
+	},
+	{
+		"ParameterKey": "KeyPair",
+		"ParameterValue": "proyect2"
 	}
 
 ]
