@@ -46,7 +46,7 @@ Likewise we can verify that the configuration is ok by clicking on the LB DNS na
 ![Captura de Pantalla 2022-03-28 a las 17 06 36](https://user-images.githubusercontent.com/23102562/160428801-8e9f6ea9-b3e2-4f79-a83e-5c23718190ca.png)
 
 
-A key-pair must be created. The Keypair name must be specified on the parameters file
+A key-pair must be created so we can access the bastion server. The Keypair name must be specified on the parameters file
 
 ````json
 [
@@ -75,6 +75,8 @@ To run the cloudformation script
 ```bash
 aws cloudformation create-stack --stack-name project2 --template-body file://project2.yml --parameters file://project2.json --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"
 ````
+After running this code we get the following URL: proje-WebAp-1IO3TRM6HOTYN-1667141232.us-east-1.elb.amazonaws.com
+
 
 
 
